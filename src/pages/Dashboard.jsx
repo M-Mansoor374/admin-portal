@@ -30,6 +30,7 @@ import Analytics from './Analytics';
 import Announcements from './Announcements';
 import Quizzes from './Quizzes';
 import Medals from './Medals';
+import Settings from './Settings';
 
 const adminNavItems = [
   { id: 'overview', label: 'Overview', icon: HiHome, component: null },
@@ -40,7 +41,7 @@ const adminNavItems = [
   { id: 'medals', label: 'Medals & Rewards', icon: HiBadgeCheck, component: Medals },
   { id: 'analytics', label: 'Analytics', icon: HiChartBar, component: Analytics },
   { id: 'announcements', label: 'Announcements', icon: HiSpeakerphone, component: Announcements },
-  { id: 'settings', label: 'Settings', icon: HiCog, component: null },
+  { id: 'settings', label: 'Settings', icon: HiCog, component: Settings },
 ];
 
 const guestNavLinks = [
