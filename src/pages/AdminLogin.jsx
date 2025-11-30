@@ -28,7 +28,7 @@ const AdminLoginComponent = () => {
   );
 
   const handleSubmit = useCallback(
-    (event) => {
+    async (event) => {
       event.preventDefault();
       setError('');
       if (isDisabled) {
@@ -38,21 +38,50 @@ const AdminLoginComponent = () => {
       
       setIsSubmitting(true);
       
-      // Admin login authentication
-      // TODO: Replace with proper backend authentication in production
-      window.setTimeout(() => {
-        sessionStorage.setItem('acceptopia-admin-authenticated', 'true');
-        sessionStorage.setItem('acceptopia-admin-role', 'admin');
+      try {
+        // Call admin backend API
+        const response = await fetch('http://localhost:5002/api/admin/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: credentials.username, // Backend expects 'email' not 'username'
+            password: credentials.password,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Login failed');
+        }
+
+        // Store token and admin data
+        if (data.token) {
+          localStorage.setItem('acceptopia-admin-token', data.token);
+          sessionStorage.setItem('acceptopia-admin-authenticated', 'true');
+          sessionStorage.setItem('acceptopia-admin-role', data.admin?.role || 'admin');
+          sessionStorage.setItem('acceptopia-admin-data', JSON.stringify(data.admin));
+        }
+
         setIsSubmitting(false);
         // Redirect to admin dashboard
         navigate(from, { replace: true });
-      }, 700);
+      } catch (error) {
+        console.error('Login error:', error);
+        setIsSubmitting(false);
+        setError(error.message || 'Invalid credentials. Please try again.');
+      }
     },
     [isDisabled, navigate, from, credentials],
   );
 
   useEffect(() => {
-    if (sessionStorage.getItem('acceptopia-admin-authenticated') === 'true') {
+    const token = localStorage.getItem('acceptopia-admin-token') || sessionStorage.getItem('acceptopia-admin-token');
+    const isAuthenticated = sessionStorage.getItem('acceptopia-admin-authenticated') === 'true';
+    
+    if (token && isAuthenticated) {
       // If already authenticated, redirect to admin dashboard
       navigate(from, { replace: true });
     }
@@ -97,18 +126,18 @@ const AdminLoginComponent = () => {
                 >
                   <div className="flex flex-col gap-1.5 sm:gap-2">
                     <label className="text-xs sm:text-sm font-semibold text-slate-300" htmlFor="username">
-                      Administrator Username
+                      Administrator Email
                     </label>
                     <div className="rounded-[18px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[26px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[1px] shadow-inner shadow-indigo-500/40">
                       <input
                         id="username"
-                        type="text"
+                        type="email"
                         name="username"
                         value={credentials.username}
                         onChange={handleChange}
-                        autoComplete="username"
+                        autoComplete="email"
                         className={inputBaseClasses}
-                        placeholder="Enter admin username"
+                        placeholder="Enter admin email"
                       />
                     </div>
                   </div>
